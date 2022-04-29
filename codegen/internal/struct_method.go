@@ -18,6 +18,7 @@ var (
 		"Deleting", "Deleted",
 	}
 	structDatabaseMethodNames = []string{
+		"Collection",
 		"Create", "Update", "Delete",
 		"CreateWithCtx", "UpdateWithCtx", "DeleteWithCtx",
 	}
@@ -28,9 +29,9 @@ var (
 func InitReservedValues(reservedFuncValues []string) {
 	// Initialise reserved function and value names
 	reservedFuncValueNames = append(reservedFuncValueNames, reservedFuncValues...)
-	reservedMethodNames = append(reservedMethodNames, structHookMethodNames...)
 
 	// Initialiase reserved method names
+	reservedMethodNames = append(reservedMethodNames, structHookMethodNames...)
 	reservedMethodNames = append(reservedMethodNames, structDatabaseMethodNames...)
 }
 
@@ -176,6 +177,11 @@ func buildDatabaseMethod(s *Struct, dbMethodInfo *structDbMethod) *Func {
 		})
 	}
 
+	funcRetTypes := []*ast.Field{}
+	for _, retType := range dbMethodInfo.retTypes {
+		funcRetTypes = append(funcRetTypes, &ast.Field{Type: ast.NewIdent(retType)})
+	}
+
 	funcArgs := []ast.Expr{}
 	for _, param := range dbMethodInfo.params {
 		funcArgs = append(funcArgs, ast.NewIdent(param.argUsage))
@@ -193,7 +199,7 @@ func buildDatabaseMethod(s *Struct, dbMethodInfo *structDbMethod) *Func {
 	f.InputAST.Type.Params = &ast.FieldList{}
 	f.InputAST.Type.Params.List = funcParams
 	f.InputAST.Type.Results = &ast.FieldList{}
-	f.InputAST.Type.Results.List = []*ast.Field{{Type: ast.NewIdent("error")}}
+	f.InputAST.Type.Results.List = funcRetTypes
 
 	// Function Body
 	f.InputAST.Body = &ast.BlockStmt{}

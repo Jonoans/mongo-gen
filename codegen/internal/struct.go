@@ -11,30 +11,30 @@ var structDbMethods = []*structDbMethod{
 	{"Create", "InsertOne", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.InsertOneOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 	{"CreateWithCtx", "InsertOneWithCtx", []*structDbMethodParam{
 		{"ctx", "context.Context", "ctx"},
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.InsertOneOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 	{"Update", "Update", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.UpdateOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 	{"UpdateWithCtx", "UpdateWithCtx", []*structDbMethodParam{
 		{"ctx", "context.Context", "ctx"},
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.UpdateOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 	{"Delete", "DeleteOne", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.DeleteOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 	{"DeleteWithCtx", "DeleteOneWithCtx", []*structDbMethodParam{
 		{"ctx", "context.Context", "ctx"},
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.DeleteOptions", "opts..."},
-	}},
+	}, []string{"error"}},
 }
 
 type structDbMethodParam struct {
@@ -47,6 +47,7 @@ type structDbMethod struct {
 	name           string
 	globalFuncName string
 	params         []*structDbMethodParam
+	retTypes       []string
 }
 
 type Struct struct {
