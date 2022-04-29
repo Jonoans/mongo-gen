@@ -1,0 +1,8 @@
+models:
+  packageName: input
+  # Folder containing the package
+  packagePath: examples/input
+output:
+  # What package and where to output models
+  packageName: output
+  packagePath: examples/output

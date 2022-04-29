@@ -1,0 +1,8 @@
+{{range .Structs}}
+type {{.Name}} struct {
+    {{range .Fields}}{{.Name}} {{.Type}} {{.StructTag}}
+    {{end}}
+    {{range .ResolverFields}}{{.Name}} {{.Type}} {{.StructTag}}
+    {{end}}
+}
+{{end}}
