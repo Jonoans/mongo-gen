@@ -300,6 +300,26 @@ func (m *Model) GetResolved_ReferencePtrMap() (*map[string]AnotherModel, error) 
 	return m.resolvedReferencePtrMap, m.errReferencePtrMap
 }
 
+func (m *AnotherModel) AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+	return AggregateFirst(m, pipeline, opts...)
+}
+
+func (m *AnotherModel) Find(query interface{}, opts ...*options.FindOneOptions) error {
+	return FindOne(m, query, opts...)
+}
+
+func (m *AnotherModel) FindWithCtx(ctx context.Context, query interface{}, opts ...*options.FindOneOptions) error {
+	return FindOneWithCtx(ctx, m, query, opts...)
+}
+
+func (m *AnotherModel) FindByObjectID(id interface{}, opts ...*options.FindOneOptions) error {
+	return FindByObjectID(m, id, opts...)
+}
+
+func (m *AnotherModel) FindByObjectIDWithCtx(ctx context.Context, id interface{}, opts ...*options.FindOneOptions) error {
+	return FindByObjectIDWithCtx(ctx, m, id, opts...)
+}
+
 func (m *AnotherModel) Create(opts ...*options.InsertOneOptions) error {
 	return InsertOne(m, opts...)
 }
@@ -317,11 +337,31 @@ func (m *AnotherModel) UpdateWithCtx(ctx context.Context, opts ...*options.Updat
 }
 
 func (m *AnotherModel) Delete(opts ...*options.DeleteOptions) error {
-	return DeleteOne(m, opts...)
+	return Delete(m, opts...)
 }
 
 func (m *AnotherModel) DeleteWithCtx(ctx context.Context, opts ...*options.DeleteOptions) error {
-	return DeleteOneWithCtx(ctx, m, opts...)
+	return DeleteWithCtx(ctx, m, opts...)
+}
+
+func (m *Model) AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+	return AggregateFirst(m, pipeline, opts...)
+}
+
+func (m *Model) Find(query interface{}, opts ...*options.FindOneOptions) error {
+	return FindOne(m, query, opts...)
+}
+
+func (m *Model) FindWithCtx(ctx context.Context, query interface{}, opts ...*options.FindOneOptions) error {
+	return FindOneWithCtx(ctx, m, query, opts...)
+}
+
+func (m *Model) FindByObjectID(id interface{}, opts ...*options.FindOneOptions) error {
+	return FindByObjectID(m, id, opts...)
+}
+
+func (m *Model) FindByObjectIDWithCtx(ctx context.Context, id interface{}, opts ...*options.FindOneOptions) error {
+	return FindByObjectIDWithCtx(ctx, m, id, opts...)
 }
 
 func (m *Model) Create(opts ...*options.InsertOneOptions) error {
@@ -341,9 +381,9 @@ func (m *Model) UpdateWithCtx(ctx context.Context, opts ...*options.UpdateOption
 }
 
 func (m *Model) Delete(opts ...*options.DeleteOptions) error {
-	return DeleteOne(m, opts...)
+	return Delete(m, opts...)
 }
 
 func (m *Model) DeleteWithCtx(ctx context.Context, opts ...*options.DeleteOptions) error {
-	return DeleteOneWithCtx(ctx, m, opts...)
+	return DeleteWithCtx(ctx, m, opts...)
 }

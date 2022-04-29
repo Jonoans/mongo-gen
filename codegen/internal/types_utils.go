@@ -1,6 +1,10 @@
 package internal
 
-import "go/types"
+import (
+	"go/types"
+	"reflect"
+	"strings"
+)
 
 func isMap(t types.Type) bool {
 	_, ok := t.(*types.Map)
@@ -43,6 +47,17 @@ func isBuiltin(t types.Type) (types.Type, bool) {
 	default:
 		return t, false
 	}
+}
+
+func structTagContainsMongogenFalse(f *Field) bool {
+	tag := reflect.StructTag(f.StructTag).Get("mongogen")
+	tags := strings.Split(tag, ",")
+	for _, t := range tags {
+		if strings.TrimSpace(t) == "false" {
+			return true
+		}
+	}
+	return false
 }
 
 func isBaseModel(t types.Type) bool {

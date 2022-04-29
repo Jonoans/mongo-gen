@@ -8,6 +8,33 @@ import (
 )
 
 var structDbMethods = []*structDbMethod{
+	{"AggregateFirst", "AggregateFirst", []*structDbMethodParam{
+		{"", "ModelInterface", "m"},
+		{"pipeline", "interface{}", "pipeline"},
+		{"opts", "...*options.AggregateOptions", "opts..."},
+	}, []string{"bool", "error"}},
+	{"Find", "FindOne", []*structDbMethodParam{
+		{"", "ModelInterface", "m"},
+		{"query", "interface{}", "query"},
+		{"opts", "...*options.FindOneOptions", "opts..."},
+	}, []string{"error"}},
+	{"FindWithCtx", "FindOneWithCtx", []*structDbMethodParam{
+		{"ctx", "context.Context", "ctx"},
+		{"", "ModelInterface", "m"},
+		{"query", "interface{}", "query"},
+		{"opts", "...*options.FindOneOptions", "opts..."},
+	}, []string{"error"}},
+	{"FindByObjectID", "FindByObjectID", []*structDbMethodParam{
+		{"", "ModelInterface", "m"},
+		{"id", "interface{}", "id"},
+		{"opts", "...*options.FindOneOptions", "opts..."},
+	}, []string{"error"}},
+	{"FindByObjectIDWithCtx", "FindByObjectIDWithCtx", []*structDbMethodParam{
+		{"ctx", "context.Context", "ctx"},
+		{"", "ModelInterface", "m"},
+		{"id", "interface{}", "id"},
+		{"opts", "...*options.FindOneOptions", "opts..."},
+	}, []string{"error"}},
 	{"Create", "InsertOne", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.InsertOneOptions", "opts..."},
@@ -26,11 +53,11 @@ var structDbMethods = []*structDbMethod{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.UpdateOptions", "opts..."},
 	}, []string{"error"}},
-	{"Delete", "DeleteOne", []*structDbMethodParam{
+	{"Delete", "Delete", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.DeleteOptions", "opts..."},
 	}, []string{"error"}},
-	{"DeleteWithCtx", "DeleteOneWithCtx", []*structDbMethodParam{
+	{"DeleteWithCtx", "DeleteWithCtx", []*structDbMethodParam{
 		{"ctx", "context.Context", "ctx"},
 		{"", "ModelInterface", "m"},
 		{"opts", "...*options.DeleteOptions", "opts..."},

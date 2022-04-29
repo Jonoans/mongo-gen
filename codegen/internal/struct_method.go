@@ -17,22 +17,24 @@ var (
 		"Updating", "Updated",
 		"Deleting", "Deleted",
 	}
-	structDatabaseMethodNames = []string{
-		"Collection",
-		"Create", "Update", "Delete",
-		"CreateWithCtx", "UpdateWithCtx", "DeleteWithCtx",
-	}
-	reservedMethodNames    = []string{"CollectionName"}
-	reservedFuncValueNames = []string{}
+	structDatabaseMethodNames = []string{}
+	reservedMethodNames       = []string{"CollectionName"}
+	reservedFuncValueNames    = []string{}
 )
 
 func InitReservedValues(reservedFuncValues []string) {
 	// Initialise reserved function and value names
 	reservedFuncValueNames = append(reservedFuncValueNames, reservedFuncValues...)
 
+	// Initialise struct database method names
+	for _, method := range structDbMethods {
+		structDatabaseMethodNames = append(structDatabaseMethodNames, method.name)
+	}
+
 	// Initialiase reserved method names
 	reservedMethodNames = append(reservedMethodNames, structHookMethodNames...)
 	reservedMethodNames = append(reservedMethodNames, structDatabaseMethodNames...)
+
 }
 
 func isCollectionNameMethod(f *ast.FuncDecl) bool {

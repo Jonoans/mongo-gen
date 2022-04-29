@@ -76,7 +76,7 @@ func (f *Field) Init() {
 	f.IsEmbedded = f.InputTypesVar.Embedded()
 
 	if !f.IsBuiltIn {
-		f.IsBaseModelDerivative = isBaseModel(f.OwnType)
+		f.IsBaseModelDerivative = !structTagContainsMongogenFalse(f) && isBaseModel(f.OwnType)
 		if f.IsBaseModelDerivative && !f.IsEmbedded {
 			log.Fatal("BaseModel must be embedded")
 		}
@@ -95,7 +95,7 @@ func (f *Field) Init() {
 		}
 	}
 
-	if f.IsEmbedded && !f.IsBaseModelDerivative {
+	if f.IsEmbedded && !structTagContainsMongogenFalse(f) && !f.IsBaseModelDerivative {
 		f.IsBaseModelDerivative = f.checkEmbeddedIsBaseModelDerivative(f.OwnType)
 	}
 }

@@ -27,7 +27,24 @@ type ModelInterface interface {
 	Updated() error
 	Deleting() error
 	Deleted() error
-}
+}// Field Information
+// Hooks
+
+
+type ModelQueryMethods interface {
+	AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
+	Find(interface{}, ...*options.FindOneOptions) error
+	FindWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
+	FindByObjectID(interface{}, ...*options.FindOneOptions) error
+	FindByObjectIDWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
+	Create(...*options.InsertOneOptions) error
+	CreateWithCtx(context.Context, ...*options.InsertOneOptions) error
+	Update(...*options.UpdateOptions) error
+	UpdateWithCtx(context.Context, ...*options.UpdateOptions) error
+	Delete(...*options.DeleteOptions) error
+	DeleteWithCtx(context.Context, ...*options.DeleteOptions) error
+}// Available query methods
+
 
 type Config struct {
 	OperationTimeout	time.Duration
@@ -51,72 +68,73 @@ func Initialise(cfg Config, opts ...*options.ClientOptions) error {
 		return err
 	}
 	defaultClt = &databaseClient{client: client, collections: map[string]*mongo.Collection{}}
+	defaultClt.init()
 	return nil
 }
 
 func GetClient() (*mongo.Client, error) {
-	if defaultClt == nil {
-		return nil, errors.New("client is not initialised, please call the Initialise method first!")
-	}
-	return defaultClt.client, nil
-}
-
-func GetDatabase() (*mongo.Database, error) {
-	if defaultClt.database == nil {
-		client, err := GetClient()
-		if err != nil {
-			return nil, err
-		}
-		defaultClt.database = client.Database(defaultCfg.DatabaseName)
-	}
-	return defaultClt.database, nil
-}
-
-func GetCollection(collectionName string) (*mongo.Collection, error) {
-	if c, ok := defaultClt.collections[collectionName]; ok {
-		return c, nil
-	}
-	db, err := GetDatabase()
+	clt, err := getDefaultClient()
 	if err != nil {
 		return nil, err
 	}
-	defaultClt.collections[collectionName] = db.Collection(collectionName)
-	return defaultClt.collections[collectionName], nil
+	return clt.client, nil
+}
+
+func GetDatabase() (*mongo.Database, error) {
+	clt, err := getDefaultClient()
+	if err != nil {
+		return nil, err
+	}
+	return clt.getDatabase(), nil
+}
+
+func GetCollection(collectionName string) (*mongo.Collection, error) {
+	clt, err := getDefaultClient()
+	if err != nil {
+		return nil, err
+	}
+	return clt.getCollection(collectionName), nil
+}
+
+func Coll(model ModelInterface) *mongo.Collection {
+	name, err := getCollectionName(model)
+	if err != nil {
+		panic(err)
+	}
+	coll, _ := GetCollection(name)
+	return coll
 }
 
 func Aggregate(results interface{}, pipeline interface{}, opts ...*options.AggregateOptions) error {
 	return AggregateWithCtx(newCtx(), results, pipeline, opts...)
 }
 
-func DeleteOne(model ModelInterface, opts ...*options.DeleteOptions) error {
-	return DeleteOneWithCtx(newCtx(), model, opts...)
+func AggregateFirst(model ModelInterface, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+	return AggregateFirstWithCtx(newCtx(), model, pipeline, opts...)
+}
+
+func Delete(model ModelInterface, opts ...*options.DeleteOptions) error {
+	return DeleteWithCtx(newCtx(), model, opts...)
+}
+
+func DeleteOne(model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	return DeleteOneWithCtx(newCtx(), model, query, opts...)
+}
+
+func DeleteMany(model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	return DeleteManyWithCtx(newCtx(), model, query, opts...)
 }
 
 func FindOne(model ModelInterface, query interface{}, opts ...*options.FindOneOptions) error {
 	return FindOneWithCtx(newCtx(), model, query, opts...)
 }
 
-func FindByUUID(model ModelInterface, uuidFieldName, uuid string, opts ...*options.FindOneOptions) error {
-	return FindOneWithCtx(newCtx(), model, bson.M{uuidFieldName: uuid}, opts...)
+func FindMany(results interface{}, query interface{}, opts ...*options.FindOptions) error {
+	return FindManyWithCtx(newCtx(), results, query, opts...)
 }
 
 func FindByObjectID(model ModelInterface, id interface{}, opts ...*options.FindOneOptions) error {
-	var oid primitive.ObjectID
-	switch v := id.(type) {
-	case primitive.ObjectID:
-		oid = v
-	case *primitive.ObjectID:
-		oid = *v
-	case string:
-		id, err := primitive.ObjectIDFromHex(v)
-		if err != nil {
-			return err
-		}
-		oid = id
-	default:
-		return errors.New("invalid id")
-	}
-	return FindOneWithCtx(newCtx(), model, bson.M{"_id": oid}, opts...)
+	return FindByObjectIDWithCtx(newCtx(), model, id, opts...)
 }
 
 func FindByObjectIDs(results interface{}, ids interface{}) error {
@@ -132,6 +150,14 @@ func Update(model ModelInterface, opts ...*options.UpdateOptions) error {
 	return UpdateWithCtx(newCtx(), model, opts...)
 }
 
+func UpdateOne(model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return UpdateOneWithCtx(newCtx(), model, filter, update, opts...)
+}
+
+func UpdateMany(model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return UpdateManyWithCtx(newCtx(), model, filter, update, opts...)
+}
+
 func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interface{}, aggregateOpts ...*options.AggregateOptions) error {
 	collectionName, err := getCollectionNameFromSlice(results)
 	if err != nil {
@@ -142,6 +168,7 @@ func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interfa
 		return err
 	}
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
+	defer cur.Close(ctx)
 	if err != nil {
 		return err
 	}
@@ -164,6 +191,7 @@ func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline 
 		return false, err
 	}
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
+	defer cur.Close(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -176,22 +204,46 @@ func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline 
 	return false, nil
 }
 
-func DeleteOneWithCtx(ctx context.Context, model ModelInterface, opts ...*options.DeleteOptions) error {
-	collectionName, err := getCollectionName(model)
-	if err != nil {
-		return err
-	}
+func DeleteWithCtx(ctx context.Context, model ModelInterface, opts ...*options.DeleteOptions) error {
 	if err := callBeforeDeleteHooks(model); err != nil {
 		return err
 	}
-	coll, err := GetCollection(collectionName)
-	if err != nil {
-		return err
-	}
-	if _, err := coll.DeleteOne(ctx, bson.M{"_id": model.GetID()}, opts...); err != nil {
+	if _, err := DeleteOneWithCtx(ctx, model, bson.M{"_id": model.GetID()}, opts...); err != nil {
 		return err
 	}
 	return callAfterDeleteHooks(model)
+}
+
+func DeleteOneWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	collectionName, err := getCollectionName(model)
+	if err != nil {
+		return nil, err
+	}
+	coll, err := GetCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+	result, err := coll.DeleteOne(ctx, query, opts...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func DeleteManyWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	collectionName, err := getCollectionName(model)
+	if err != nil {
+		return nil, err
+	}
+	coll, err := GetCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+	result, err := coll.DeleteMany(ctx, query, opts...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
 }
 
 func FindOneWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.FindOneOptions) error {
@@ -207,6 +259,37 @@ func FindOneWithCtx(ctx context.Context, model ModelInterface, query interface{}
 		return err
 	}
 	return callAfterQueryHooks(model)
+}
+
+func FindManyWithCtx(ctx context.Context, results interface{}, query interface{}, opts ...*options.FindOptions) error {
+	collectionName, err := getCollectionNameFromSlice(results)
+	if err != nil {
+		return err
+	}
+	coll, err := GetCollection(collectionName)
+	if err != nil {
+		return err
+	}
+	cur, err := coll.Find(ctx, query, opts...)
+	defer cur.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if err := cur.All(ctx, results); err != nil {
+		return err
+	}
+	if err := runFuncOnResultsSliceItems(results, callAfterQueryHooks); err != nil {
+		return err
+	}
+	return nil
+}
+
+func FindByObjectIDWithCtx(ctx context.Context, model ModelInterface, id interface{}, opts ...*options.FindOneOptions) error {
+	oid, err := assertObjectID(id)
+	if err != nil {
+		return err
+	}
+	return FindOneWithCtx(ctx, model, bson.M{"_id": oid}, opts...)
 }
 
 func InsertOneWithCtx(ctx context.Context, model ModelInterface, opts ...*options.InsertOneOptions) error {
@@ -246,6 +329,38 @@ func UpdateWithCtx(ctx context.Context, model ModelInterface, opts ...*options.U
 	return callAfterUpdateHooks(model)
 }
 
+func UpdateOneWithCtx(ctx context.Context, model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	collectionName, err := getCollectionName(model)
+	if err != nil {
+		return nil, err
+	}
+	coll, err := GetCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+	result, err := coll.UpdateOne(ctx, filter, update, opts...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	collectionName, err := getCollectionName(model)
+	if err != nil {
+		return nil, err
+	}
+	coll, err := GetCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+	result, err := coll.UpdateMany(ctx, filter, update, opts...)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 func Transaction(fn codegen.TransactionFunc) error {
 	return TransactionWithOptions(fn, defaultCfg.TxnSessionOptions)
 }
@@ -274,14 +389,57 @@ type databaseClient struct {
 	collections	map[string]*mongo.Collection
 }
 
+func (c *databaseClient) init() {
+	c.collections = make(map[string]*mongo.Collection)
+}
+
+func (c *databaseClient) getDatabase() *mongo.Database {
+	if c.database == nil {
+		c.database = c.client.Database(defaultCfg.DatabaseName)
+	}
+	return c.database
+}
+
+func (c *databaseClient) getCollection(name string) *mongo.Collection {
+	if coll, ok := c.collections[name]; ok {
+		return coll
+	}
+	c.collections[name] = c.getDatabase().Collection(name)
+	return c.collections[name]
+}
+
 var (
 	defaultClt	*databaseClient
 	defaultCfg	Config
 )
 
+func Ctx() context.Context {
+	return newCtx()
+}
+
 func newCtx() context.Context {
 	ctx, _ := context.WithTimeout(context.Background(), defaultCfg.OperationTimeout)
 	return ctx
+}
+
+func getDefaultClient() (*databaseClient, error) {
+	if defaultClt == nil {
+		return nil, errors.New("client is not initialised, please call the Initialise method first!")
+	}
+	return defaultClt, nil
+}
+
+func assertObjectID(id interface{}) (primitive.ObjectID, error) {
+	switch v := id.(type) {
+	case primitive.ObjectID:
+		return v, nil
+	case *primitive.ObjectID:
+		return *v, nil
+	case string:
+		return primitive.ObjectIDFromHex(v)
+	default:
+		return primitive.NilObjectID, errors.New("invalid object id")
+	}
 }
 
 func checkConfig(cfg *Config) error {
