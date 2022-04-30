@@ -138,7 +138,12 @@ func (p *Package) prepareResolvableFields() {
 
 func (p *Package) prepareStructs() {
 	for _, s := range p.Structs {
-		structTypeObj := p.InputUser.Types.Scope().Lookup(s.Name).Type().Underlying().(*types.Struct)
+		var structTypeObj *types.Struct
+		if s.Generated {
+			structTypeObj = p.InputGenerated.Types.Scope().Lookup(s.Name).Type().Underlying().(*types.Struct)
+		} else {
+			structTypeObj = p.InputUser.Types.Scope().Lookup(s.Name).Type().Underlying().(*types.Struct)
+		}
 
 		s.Parent = p
 		s.InputType = structTypeObj
@@ -204,16 +209,18 @@ func (p *Package) parseGenerated() {
 						}
 						switch specType := spec.Type.(type) {
 						case *ast.StructType:
+							structName := spec.Name.Name
+
 							// Struct from user overrides existing
-							if _, ok := p.Structs[spec.Name.Name]; ok {
+							if _, ok := p.Structs[structName]; ok {
 								continue
 							}
 
-							structName := spec.Name.Name
 							p.Structs[structName] = &Struct{
 								SourceFile: filename,
 								InputAST:   specType,
 								Name:       structName,
+								Generated:  true,
 							}
 						case *ast.InterfaceType:
 							interfaceName := spec.Name.Name

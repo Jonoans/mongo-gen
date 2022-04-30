@@ -93,6 +93,7 @@ type Struct struct {
 	ResolverMethods      []*Func // Source file will be set to struct's source file
 
 	Name           string
+	Generated      bool
 	IsCollection   bool
 	EmbeddedFields []*Field
 	Fields         []*Field

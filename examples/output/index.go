@@ -8,6 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type ATestStruct struct {
+}
+
 type AnotherModel struct {
 	codegen.BaseModel
 	Sub SubModel `bson:"sub"`
