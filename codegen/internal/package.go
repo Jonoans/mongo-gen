@@ -34,7 +34,7 @@ func (p *Package) Init() {
 	p.Interfaces = make(map[string][]*Interface)
 	p.Values = make(map[string][]*Value)
 	p.parseUserStructs()
-	p.parseGeneratedNonStructs()
+	p.parseGenerated()
 	p.prepareStructs()
 	p.prepareResolvableFields()
 }
@@ -184,7 +184,8 @@ func (p *Package) parseUserStructs() {
 	}
 }
 
-func (p *Package) parseGeneratedNonStructs() {
+// Structs will be merged
+func (p *Package) parseGenerated() {
 	for _, file := range p.InputGenerated.Syntax {
 		filename := p.InputGenerated.Fset.File(file.Pos()).Name()
 		filename = utils.BaseFilename(filename)
@@ -201,7 +202,19 @@ func (p *Package) parseGeneratedNonStructs() {
 						if isFuncValueNameReserved(spec.Name.Name) {
 							continue
 						}
-						switch spec.Type.(type) {
+						switch specType := spec.Type.(type) {
+						case *ast.StructType:
+							// Struct from user overrides existing
+							if _, ok := p.Structs[spec.Name.Name]; ok {
+								continue
+							}
+
+							structName := spec.Name.Name
+							p.Structs[structName] = &Struct{
+								SourceFile: filename,
+								InputAST:   specType,
+								Name:       structName,
+							}
 						case *ast.InterfaceType:
 							interfaceName := spec.Name.Name
 							p.Interfaces[filename] = append(p.Interfaces[filename],
