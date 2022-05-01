@@ -56,7 +56,18 @@ func initPackage(cfg *config.ConfigFile) *internal.Package {
 		log.Fatal(err)
 	}
 
-	pkgObject := &internal.Package{InputUser: userPkg, InputGenerated: outputPkg, InputGeneratedLines: generatedLines}
+	delete(generatedLines, "codegen_.go")
+	for _, f := range cfg.Output.IgnoredFiles {
+		delete(generatedLines, f)
+	}
+
+	pkgObject := &internal.Package{
+		InputUser:             userPkg,
+		InputGenerated:        outputPkg,
+		InputGeneratedLines:   generatedLines,
+		IgnoredUserFiles:      cfg.Models.IgnoredFiles,
+		IgnoredGeneratedFiles: cfg.Output.IgnoredFiles,
+	}
 	pkgObject.Init()
 	return pkgObject
 }

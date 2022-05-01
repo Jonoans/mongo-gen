@@ -11,6 +11,9 @@ import (
 )
 
 type Package struct {
+	IgnoredUserFiles      []string
+	IgnoredGeneratedFiles []string
+
 	InputUser           *packages.Package
 	InputGenerated      *packages.Package
 	InputGeneratedLines map[string][]string
@@ -43,10 +46,6 @@ func (p *Package) GeneratePackageFiles() map[string]*PackageFile {
 	pkgFiles := map[string]*PackageFile{}
 
 	for n, fc := range p.InputGeneratedLines {
-		if n == "codegen_.go" {
-			continue
-		}
-
 		if _, ok := pkgFiles[n]; !ok {
 			pkgFiles[n] = &PackageFile{
 				Filename: n,
@@ -159,7 +158,7 @@ func (p *Package) parseUserStructs() {
 	for _, file := range p.InputUser.Syntax {
 		filename := p.InputUser.Fset.File(file.Pos()).Name()
 		filename = utils.BaseFilename(filename)
-		if filename == "codegen_.go" {
+		if filename == "codegen_.go" || utils.Contains(p.IgnoredUserFiles, filename) {
 			continue
 		}
 
@@ -194,7 +193,7 @@ func (p *Package) parseGenerated() {
 	for _, file := range p.InputGenerated.Syntax {
 		filename := p.InputGenerated.Fset.File(file.Pos()).Name()
 		filename = utils.BaseFilename(filename)
-		if filename == "codegen_.go" {
+		if filename == "codegen_.go" || utils.Contains(p.IgnoredGeneratedFiles, filename) {
 			continue
 		}
 

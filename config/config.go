@@ -12,10 +12,11 @@ import (
 )
 
 type ModelsConfig struct {
-	PackageName string `yaml:"packageName,omitempty"`
-	PackagePath string `yaml:"packagePath,omitempty"`
-	PackageRoot string
-	ModuleRoot  string
+	PackageName  string   `yaml:"packageName,omitempty"`
+	PackagePath  string   `yaml:"packagePath,omitempty"`
+	IgnoredFiles []string `yaml:"ignoredFiles,omitempty"`
+	PackageRoot  string
+	ModuleRoot   string
 }
 
 var modReg = regexp.MustCompile(`module\s+(.*)`)
@@ -70,9 +71,10 @@ func (mc *ModelsConfig) IsValid() bool {
 }
 
 type OutputConfig struct {
-	PackageName string `yaml:"packageName,omitempty"`
-	PackagePath string `yaml:"packagePath,omitempty"`
-	FileSuffix  string
+	PackageName  string   `yaml:"packageName,omitempty"`
+	PackagePath  string   `yaml:"packagePath,omitempty"`
+	IgnoredFiles []string `yaml:"ignoredFiles,omitempty"`
+	FileSuffix   string
 }
 
 func (oc *OutputConfig) IsValid() bool {

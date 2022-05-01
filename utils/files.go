@@ -6,6 +6,15 @@ import (
 	"runtime"
 )
 
+func Contains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
 func GetMyPath() string {
 	_, file, _, _ := runtime.Caller(1)
 	return filepath.Dir(file)
