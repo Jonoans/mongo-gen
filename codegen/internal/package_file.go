@@ -138,10 +138,8 @@ func (p *PackageFile) writeStructHookMethods(buffer *bytes.Buffer) {
 
 func (p *PackageFile) writeStructResolverMethods(buffer *bytes.Buffer) {
 	for _, s := range p.Structs {
-		if s.IsCollection {
-			for _, m := range s.ResolverMethods {
-				p.writeFuncToBuffer(buffer, m)
-			}
+		for _, m := range s.ResolverMethods {
+			p.writeFuncToBuffer(buffer, m)
 		}
 	}
 }
