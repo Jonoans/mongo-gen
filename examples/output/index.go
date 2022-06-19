@@ -199,10 +199,6 @@ func (m *Model) GetResolved_ReferenceSliceInSlice() ([][]*AnotherModel, error) {
 				return m.resolvedReferenceSliceInSlice, m.errReferenceSliceInSlice
 			}
 		}
-		if m.errReferenceSliceInSlice != nil {
-			m.initReferenceSliceInSlice = true
-			return m.resolvedReferenceSliceInSlice, m.errReferenceSliceInSlice
-		}
 	}
 	m.initReferenceSliceInSlice = true
 	return m.resolvedReferenceSliceInSlice, m.errReferenceSliceInSlice

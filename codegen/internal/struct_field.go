@@ -357,10 +357,6 @@ func (f *Field) buildResolverBody() []ast.Stmt {
 			f.ChildField.References.IDReferenceVar = valVar
 			f.ChildField.References.InLoop = true
 			loopBodyFuncs := f.ChildField.buildResolverBody()
-			loopBodyFuncs = append(loopBodyFuncs, f.checkErrorFieldNil(
-				f.assignInitBoolTrue(),
-				f.returnResolvedFieldAndError(),
-			))
 			body = append(
 				body,
 				// f.newAssignmentVar(),
@@ -377,10 +373,6 @@ func (f *Field) buildResolverBody() []ast.Stmt {
 			f.ChildField.References.IDReferenceVar = valVar
 			f.ChildField.References.InLoop = true
 			loopBodyFuncs := f.ChildField.buildResolverBody()
-			loopBodyFuncs = append(loopBodyFuncs, f.checkErrorFieldNil(
-				f.assignInitBoolTrue(),
-				f.returnResolvedFieldAndError(),
-			))
 			body = append(
 				body,
 				f.newAssignmentVar(),
@@ -594,6 +586,13 @@ func (f *Field) findByObjectID() []ast.Stmt {
 		retStmt = append(retStmt, findAfterStmt)
 	}
 
+	if !f.IsResolvable {
+		retStmt = append(retStmt, f.checkErrorFieldNil(
+			f.assignInitBoolTrue(),
+			f.returnResolvedFieldAndError(),
+		))
+	}
+
 	return retStmt
 }
 
@@ -626,8 +625,15 @@ func (f *Field) findByObjectIDs() []ast.Stmt {
 		},
 	)
 
-	if assignAfter := f.afterFindActions(oldAssignVar); assignAfter != nil {
-		retStmt = append(retStmt, assignAfter)
+	if findAfterStmt := f.afterFindActions(oldAssignVar); findAfterStmt != nil {
+		retStmt = append(retStmt, findAfterStmt)
+	}
+
+	if f.ChildField.ChildField != nil {
+		retStmt = append(retStmt, f.checkErrorFieldNil(
+			f.assignInitBoolTrue(),
+			f.returnResolvedFieldAndError(),
+		))
 	}
 
 	return retStmt
