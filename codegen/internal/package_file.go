@@ -221,6 +221,12 @@ func (p *PackageFile) sortStructs() {
 
 func (p *PackageFile) sortFunctions() {
 	sort.Slice(p.Functions, func(i, j int) bool {
+		if p.Functions[i].Name == p.Functions[j].Name {
+			if p.Functions[i].Parent == nil || p.Functions[j].Parent == nil {
+				return p.Functions[i].Parent == nil
+			}
+			return p.Functions[i].Parent.Name < p.Functions[j].Parent.Name
+		}
 		return p.Functions[i].Name < p.Functions[j].Name
 	})
 }
