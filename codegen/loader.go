@@ -19,7 +19,7 @@ var (
 		packages.NeedModule |
 		packages.NeedDeps
 	cachedPkgs  = map[string]*packages.Package{}
-	loadDefMode = packages.NeedSyntax
+	loadDefMode = packages.NeedFiles | packages.NeedSyntax
 )
 
 func loadPackage(patterns ...string) ([]*packages.Package, error) {
