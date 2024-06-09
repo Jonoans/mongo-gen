@@ -433,16 +433,24 @@ func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter interfa
 }
 
 func Transaction(fn codegen.TransactionFunc) error {
-	return TransactionWithOptions(fn, defaultCfg.TxnSessionOptions)
+	return TransactionWithCtx(newCtx(), fn)
+}
+
+func TransactionWithCtx(ctx context.Context, fn codegen.TransactionFunc) error {
+	return TransactionWithCtxOptions(ctx, fn, defaultCfg.TxnSessionOptions)
 }
 
 func TransactionWithOptions(fn codegen.TransactionFunc, opts *options.SessionOptions) error {
+	return TransactionWithCtxOptions(newCtx(), fn, opts)
+}
+
+func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, opts *options.SessionOptions) error {
 	client, err := GetClient()
 	if err != nil {
 		return err
 	}
 
-	return client.UseSessionWithOptions(newCtx(), opts, func(ctx mongo.SessionContext) error {
+	return client.UseSessionWithOptions(ctx, opts, func(ctx mongo.SessionContext) error {
 		ctx.StartTransaction()
 		return fn(ctx)
 	})
