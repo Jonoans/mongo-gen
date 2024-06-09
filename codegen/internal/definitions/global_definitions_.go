@@ -193,7 +193,10 @@ func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interfa
 	}
 
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -221,7 +224,10 @@ func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline 
 	}
 
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
+
 	if err != nil {
 		return false, err
 	}
@@ -316,7 +322,10 @@ func FindManyWithCtx(ctx context.Context, results interface{}, query interface{}
 	}
 
 	cur, err := coll.Find(ctx, query, opts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
+
 	if err != nil {
 		return err
 	}
