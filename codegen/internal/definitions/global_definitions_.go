@@ -149,7 +149,7 @@ func FindByObjectID(model ModelInterface, id interface{}, opts ...*options.FindO
 }
 
 func FindByObjectIDs(results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
-	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline)
+	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline...)
 }
 
 func FindByObjectIDsWithCtx(ctx context.Context, results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
