@@ -149,6 +149,10 @@ func FindByObjectID(model ModelInterface, id interface{}, opts ...*options.FindO
 }
 
 func FindByObjectIDs(results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
+	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline)
+}
+
+func FindByObjectIDsWithCtx(ctx context.Context, results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
 	pipeline := bson.A{
 		bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}}},
 		bson.M{"$addFields": bson.M{"_codegen_sort_index": bson.M{"$indexOfArray": bson.A{ids, "$_id"}}}},
@@ -156,7 +160,7 @@ func FindByObjectIDs(results interface{}, ids interface{}, additionalPipeline ..
 		bson.M{"$project": bson.M{"_codegen_sort_index": 0}},
 	}
 	pipeline = append(pipeline, additionalPipeline...)
-	return Aggregate(results, pipeline)
+	return AggregateWithCtx(ctx, results, pipeline)
 }
 
 func InsertOne(model ModelInterface, opts ...*options.InsertOneOptions) error {
