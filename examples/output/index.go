@@ -303,6 +303,10 @@ func (m *AnotherModel) AggregateFirst(pipeline interface{}, opts ...*options.Agg
 	return AggregateFirst(m, pipeline, opts...)
 }
 
+func (m *AnotherModel) AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+	return AggregateFirstWithCtx(ctx, m, pipeline, opts...)
+}
+
 func (m *AnotherModel) Find(query interface{}, opts ...*options.FindOneOptions) error {
 	return FindOne(m, query, opts...)
 }
@@ -345,6 +349,10 @@ func (m *AnotherModel) DeleteWithCtx(ctx context.Context, opts ...*options.Delet
 
 func (m *Model) AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
 	return AggregateFirst(m, pipeline, opts...)
+}
+
+func (m *Model) AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+	return AggregateFirstWithCtx(ctx, m, pipeline, opts...)
 }
 
 func (m *Model) Find(query interface{}, opts ...*options.FindOneOptions) error {

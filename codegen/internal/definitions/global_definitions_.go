@@ -35,6 +35,7 @@ type ModelInterface interface {
 // Available query methods
 type ModelQueryMethods interface {
 	AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
+	AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
 	Find(interface{}, ...*options.FindOneOptions) error
 	FindWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
 	FindByObjectID(interface{}, ...*options.FindOneOptions) error

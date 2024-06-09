@@ -13,6 +13,12 @@ var structDbMethods = []*structDbMethod{
 		{"pipeline", "interface{}", "pipeline"},
 		{"opts", "...*options.AggregateOptions", "opts..."},
 	}, []string{"bool", "error"}},
+	{"AggregateFirstWithCtx", "AggregateFirstWithCtx", []*structDbMethodParam{
+        {"ctx", "context.Context", "ctx"},
+		{"", "ModelInterface", "m"},
+		{"pipeline", "interface{}", "pipeline"},
+		{"opts", "...*options.AggregateOptions", "opts..."},
+	}, []string{"bool", "error"}},
 	{"Find", "FindOne", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
 		{"query", "interface{}", "query"},

@@ -33,6 +33,7 @@ type ModelInterface interface {
 
 type ModelQueryMethods interface {
 	AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
+	AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
 	Find(interface{}, ...*options.FindOneOptions) error
 	FindWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
 	FindByObjectID(interface{}, ...*options.FindOneOptions) error
@@ -138,9 +139,13 @@ func FindByObjectID(model ModelInterface, id interface{}, opts ...*options.FindO
 }
 
 func FindByObjectIDs(results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
+	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline...)
+}
+
+func FindByObjectIDsWithCtx(ctx context.Context, results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
 	pipeline := bson.A{bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}}}, bson.M{"$addFields": bson.M{"_codegen_sort_index": bson.M{"$indexOfArray": bson.A{ids, "$_id"}}}}, bson.M{"$sort": bson.M{"_codegen_sort_index": 1}}, bson.M{"$project": bson.M{"_codegen_sort_index": 0}}}
 	pipeline = append(pipeline, additionalPipeline...)
-	return Aggregate(results, pipeline)
+	return AggregateWithCtx(ctx, results, pipeline)
 }
 
 func InsertOne(model ModelInterface, opts ...*options.InsertOneOptions) error {
@@ -169,7 +174,9 @@ func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interfa
 		return err
 	}
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
 	if err != nil {
 		return err
 	}
@@ -192,7 +199,9 @@ func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline 
 		return false, err
 	}
 	cur, err := collection.Aggregate(ctx, pipeline, aggregateOpts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
 	if err != nil {
 		return false, err
 	}
@@ -272,7 +281,9 @@ func FindManyWithCtx(ctx context.Context, results interface{}, query interface{}
 		return err
 	}
 	cur, err := coll.Find(ctx, query, opts...)
-	defer cur.Close(ctx)
+	if cur != nil {
+		defer cur.Close(ctx)
+	}
 	if err != nil {
 		return err
 	}
@@ -363,15 +374,23 @@ func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter interfa
 }
 
 func Transaction(fn codegen.TransactionFunc) error {
-	return TransactionWithOptions(fn, defaultCfg.TxnSessionOptions)
+	return TransactionWithCtx(newCtx(), fn)
+}
+
+func TransactionWithCtx(ctx context.Context, fn codegen.TransactionFunc) error {
+	return TransactionWithCtxOptions(ctx, fn, defaultCfg.TxnSessionOptions)
 }
 
 func TransactionWithOptions(fn codegen.TransactionFunc, opts *options.SessionOptions) error {
+	return TransactionWithCtxOptions(newCtx(), fn, opts)
+}
+
+func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, opts *options.SessionOptions) error {
 	client, err := GetClient()
 	if err != nil {
 		return err
 	}
-	return client.UseSessionWithOptions(newCtx(), opts, func(ctx mongo.SessionContext) error {
+	return client.UseSessionWithOptions(ctx, opts, func(ctx mongo.SessionContext) error {
 		ctx.StartTransaction()
 		return fn(ctx)
 	})
