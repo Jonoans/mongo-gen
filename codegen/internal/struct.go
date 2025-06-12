@@ -28,7 +28,7 @@ var structDbMethods = []*structDbMethod{
 		{"ctx", "context.Context", "ctx"},
 		{"", "ModelInterface", "m"},
 		{"query", "any", "query"},
-		{"opts", "...options.Lister[options.FindOneOptions]", "opts..."},
+		{"opts", "...options.Lister[options.FindOptions]", "opts..."},
 	}, []string{"error"}},
 	{"FindByObjectID", "FindByObjectID", []*structDbMethodParam{
 		{"", "ModelInterface", "m"},
