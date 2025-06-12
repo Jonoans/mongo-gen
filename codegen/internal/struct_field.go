@@ -230,7 +230,7 @@ func (f *Field) MutateResolvableFieldType() {
 		}
 
 		if currField.ChildField == nil {
-			newType += "primitive.ObjectID"
+			newType += "bson.ObjectID"
 			break
 		}
 

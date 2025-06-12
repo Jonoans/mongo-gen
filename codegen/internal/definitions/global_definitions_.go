@@ -7,18 +7,17 @@ import (
 	"time"
 
 	"github.com/jonoans/mongo-gen/codegen"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type ModelInterface interface {
 	CollectionName() string
 
 	// Field Information
-	GetID() interface{}
-	SetID(id interface{})
+	GetID() any
+	SetID(id any)
 
 	// Hooks
 	Queried() error
@@ -34,25 +33,25 @@ type ModelInterface interface {
 
 // Available query methods
 type ModelQueryMethods interface {
-	AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
-	AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error)
-	Find(interface{}, ...*options.FindOneOptions) error
-	FindWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
-	FindByObjectID(interface{}, ...*options.FindOneOptions) error
-	FindByObjectIDWithCtx(context.Context, interface{}, ...*options.FindOneOptions) error
-	Create(...*options.InsertOneOptions) error
-	CreateWithCtx(context.Context, ...*options.InsertOneOptions) error
-	Update(...*options.UpdateOptions) error
-	UpdateWithCtx(context.Context, ...*options.UpdateOptions) error
-	Delete(...*options.DeleteOptions) error
-	DeleteWithCtx(context.Context, ...*options.DeleteOptions) error
+	AggregateFirst(pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error)
+	AggregateFirstWithCtx(ctx context.Context, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error)
+	Find(any, ...options.Lister[options.FindOneOptions]) error
+	FindWithCtx(context.Context, any, ...options.Lister[options.FindOptions]) error
+	FindByObjectID(any, ...options.Lister[options.FindOneOptions]) error
+	FindByObjectIDWithCtx(context.Context, any, ...options.Lister[options.FindOneOptions]) error
+	Create(...options.Lister[options.InsertOneOptions]) error
+	CreateWithCtx(context.Context, ...options.Lister[options.InsertOneOptions]) error
+	Update(...options.Lister[options.UpdateOneOptions]) error
+	UpdateWithCtx(context.Context, ...options.Lister[options.UpdateOneOptions]) error
+	Delete(...options.Lister[options.DeleteOneOptions]) error
+	DeleteWithCtx(context.Context, ...options.Lister[options.DeleteOneOptions]) error
 }
 
 type Config struct {
 	OperationTimeout time.Duration
 	DatabaseName     string
 
-	TxnSessionOptions *options.SessionOptions
+	TxnSessionOptions *options.SessionOptionsBuilder
 }
 
 func Initialise(cfg Config, opts ...*options.ClientOptions) error {
@@ -60,17 +59,13 @@ func Initialise(cfg Config, opts ...*options.ClientOptions) error {
 		return err
 	}
 
-	defaultCfg = cfg
-	client, err := mongo.NewClient(opts...)
-	if err != nil {
-		return err
-	}
-
 	if defaultClt != nil {
 		return errors.New("client is already initialised")
 	}
 
-	if err := client.Connect(newCtx()); err != nil {
+	defaultCfg = cfg
+	client, err := mongo.Connect(opts...)
+	if err != nil {
 		return err
 	}
 
@@ -117,43 +112,43 @@ func Coll(model ModelInterface) *mongo.Collection {
 
 // Section: Query Functions
 
-func Aggregate(results interface{}, pipeline interface{}, opts ...*options.AggregateOptions) error {
+func Aggregate(results any, pipeline any, opts ...options.Lister[options.AggregateOptions]) error {
 	return AggregateWithCtx(newCtx(), results, pipeline, opts...)
 }
 
-func AggregateFirst(model ModelInterface, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+func AggregateFirst(model ModelInterface, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	return AggregateFirstWithCtx(newCtx(), model, pipeline, opts...)
 }
 
-func Delete(model ModelInterface, opts ...*options.DeleteOptions) error {
+func Delete(model ModelInterface, opts ...options.Lister[options.DeleteOneOptions]) error {
 	return DeleteWithCtx(newCtx(), model, opts...)
 }
 
-func DeleteOne(model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+func DeleteOne(model ModelInterface, query any, opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
 	return DeleteOneWithCtx(newCtx(), model, query, opts...)
 }
 
-func DeleteMany(model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+func DeleteMany(model ModelInterface, query any, opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
 	return DeleteManyWithCtx(newCtx(), model, query, opts...)
 }
 
-func FindOne(model ModelInterface, query interface{}, opts ...*options.FindOneOptions) error {
+func FindOne(model ModelInterface, query any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindOneWithCtx(newCtx(), model, query, opts...)
 }
 
-func FindMany(results interface{}, query interface{}, opts ...*options.FindOptions) error {
+func FindMany(results any, query any, opts ...options.Lister[options.FindOptions]) error {
 	return FindManyWithCtx(newCtx(), results, query, opts...)
 }
 
-func FindByObjectID(model ModelInterface, id interface{}, opts ...*options.FindOneOptions) error {
+func FindByObjectID(model ModelInterface, id any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindByObjectIDWithCtx(newCtx(), model, id, opts...)
 }
 
-func FindByObjectIDs(results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
+func FindByObjectIDs(results any, ids any, additionalPipeline ...any) error {
 	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline...)
 }
 
-func FindByObjectIDsWithCtx(ctx context.Context, results interface{}, ids interface{}, additionalPipeline ...interface{}) error {
+func FindByObjectIDsWithCtx(ctx context.Context, results any, ids any, additionalPipeline ...any) error {
 	pipeline := bson.A{
 		bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}}},
 		bson.M{"$addFields": bson.M{"_codegen_sort_index": bson.M{"$indexOfArray": bson.A{ids, "$_id"}}}},
@@ -164,25 +159,25 @@ func FindByObjectIDsWithCtx(ctx context.Context, results interface{}, ids interf
 	return AggregateWithCtx(ctx, results, pipeline)
 }
 
-func InsertOne(model ModelInterface, opts ...*options.InsertOneOptions) error {
+func InsertOne(model ModelInterface, opts ...options.Lister[options.InsertOneOptions]) error {
 	return InsertOneWithCtx(newCtx(), model, opts...)
 }
 
-func Update(model ModelInterface, opts ...*options.UpdateOptions) error {
+func Update(model ModelInterface, opts ...options.Lister[options.UpdateOneOptions]) error {
 	return UpdateWithCtx(newCtx(), model, opts...)
 }
 
-func UpdateOne(model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func UpdateOne(model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
 	return UpdateOneWithCtx(newCtx(), model, filter, update, opts...)
 }
 
-func UpdateMany(model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func UpdateMany(model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
 	return UpdateManyWithCtx(newCtx(), model, filter, update, opts...)
 }
 
 // Section: Context Functions
 
-func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interface{}, aggregateOpts ...*options.AggregateOptions) error {
+func AggregateWithCtx(ctx context.Context, results any, pipeline any, aggregateOpts ...options.Lister[options.AggregateOptions]) error {
 	collectionName, err := getCollectionNameFromSlice(results)
 	if err != nil {
 		return err
@@ -213,7 +208,7 @@ func AggregateWithCtx(ctx context.Context, results interface{}, pipeline interfa
 	return nil
 }
 
-func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline interface{}, aggregateOpts ...*options.AggregateOptions) (bool, error) {
+func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline any, aggregateOpts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	collectionName, err := getCollectionName(result)
 	if err != nil {
 		return false, err
@@ -243,7 +238,7 @@ func AggregateFirstWithCtx(ctx context.Context, result ModelInterface, pipeline 
 	return false, nil
 }
 
-func DeleteWithCtx(ctx context.Context, model ModelInterface, opts ...*options.DeleteOptions) error {
+func DeleteWithCtx(ctx context.Context, model ModelInterface, opts ...options.Lister[options.DeleteOneOptions]) error {
 	if err := callBeforeDeleteHooks(model); err != nil {
 		return err
 	}
@@ -255,7 +250,7 @@ func DeleteWithCtx(ctx context.Context, model ModelInterface, opts ...*options.D
 	return callAfterDeleteHooks(model)
 }
 
-func DeleteOneWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+func DeleteOneWithCtx(ctx context.Context, model ModelInterface, query any, opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return nil, err
@@ -274,7 +269,7 @@ func DeleteOneWithCtx(ctx context.Context, model ModelInterface, query interface
 	return result, nil
 }
 
-func DeleteManyWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+func DeleteManyWithCtx(ctx context.Context, model ModelInterface, query any, opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return nil, err
@@ -293,7 +288,7 @@ func DeleteManyWithCtx(ctx context.Context, model ModelInterface, query interfac
 	return result, nil
 }
 
-func FindOneWithCtx(ctx context.Context, model ModelInterface, query interface{}, opts ...*options.FindOneOptions) error {
+func FindOneWithCtx(ctx context.Context, model ModelInterface, query any, opts ...options.Lister[options.FindOneOptions]) error {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return err
@@ -311,7 +306,7 @@ func FindOneWithCtx(ctx context.Context, model ModelInterface, query interface{}
 	return callAfterQueryHooks(model)
 }
 
-func FindManyWithCtx(ctx context.Context, results interface{}, query interface{}, opts ...*options.FindOptions) error {
+func FindManyWithCtx(ctx context.Context, results any, query any, opts ...options.Lister[options.FindOptions]) error {
 	collectionName, err := getCollectionNameFromSlice(results)
 	if err != nil {
 		return err
@@ -342,7 +337,7 @@ func FindManyWithCtx(ctx context.Context, results interface{}, query interface{}
 	return nil
 }
 
-func FindByObjectIDWithCtx(ctx context.Context, model ModelInterface, id interface{}, opts ...*options.FindOneOptions) error {
+func FindByObjectIDWithCtx(ctx context.Context, model ModelInterface, id any, opts ...options.Lister[options.FindOneOptions]) error {
 	oid, err := assertObjectID(id)
 	if err != nil {
 		return err
@@ -350,7 +345,7 @@ func FindByObjectIDWithCtx(ctx context.Context, model ModelInterface, id interfa
 	return FindOneWithCtx(ctx, model, bson.M{"_id": oid}, opts...)
 }
 
-func InsertOneWithCtx(ctx context.Context, model ModelInterface, opts ...*options.InsertOneOptions) error {
+func InsertOneWithCtx(ctx context.Context, model ModelInterface, opts ...options.Lister[options.InsertOneOptions]) error {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return err
@@ -373,7 +368,7 @@ func InsertOneWithCtx(ctx context.Context, model ModelInterface, opts ...*option
 	return callAfterCreateHooks(model, result)
 }
 
-func UpdateWithCtx(ctx context.Context, model ModelInterface, opts ...*options.UpdateOptions) error {
+func UpdateWithCtx(ctx context.Context, model ModelInterface, opts ...options.Lister[options.UpdateOneOptions]) error {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return err
@@ -395,7 +390,7 @@ func UpdateWithCtx(ctx context.Context, model ModelInterface, opts ...*options.U
 	return callAfterUpdateHooks(model)
 }
 
-func UpdateOneWithCtx(ctx context.Context, model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func UpdateOneWithCtx(ctx context.Context, model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return nil, err
@@ -414,7 +409,7 @@ func UpdateOneWithCtx(ctx context.Context, model ModelInterface, filter interfac
 	return result, nil
 }
 
-func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
 	collectionName, err := getCollectionName(model)
 	if err != nil {
 		return nil, err
@@ -441,18 +436,19 @@ func TransactionWithCtx(ctx context.Context, fn codegen.TransactionFunc) error {
 	return TransactionWithCtxOptions(ctx, fn, defaultCfg.TxnSessionOptions)
 }
 
-func TransactionWithOptions(fn codegen.TransactionFunc, opts *options.SessionOptions) error {
+func TransactionWithOptions(fn codegen.TransactionFunc, opts *options.SessionOptionsBuilder) error {
 	return TransactionWithCtxOptions(newCtx(), fn, opts)
 }
 
-func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, opts *options.SessionOptions) error {
+func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, opts *options.SessionOptionsBuilder) error {
 	client, err := GetClient()
 	if err != nil {
 		return err
 	}
 
-	return client.UseSessionWithOptions(ctx, opts, func(ctx mongo.SessionContext) error {
-		ctx.StartTransaction()
+	return client.UseSessionWithOptions(ctx, opts, func(ctx context.Context) error {
+		sess := mongo.SessionFromContext(ctx)
+		sess.StartTransaction()
 		return fn(ctx)
 	})
 }
@@ -513,16 +509,16 @@ func getDefaultClient() (*databaseClient, error) {
 	return defaultClt, nil
 }
 
-func assertObjectID(id interface{}) (primitive.ObjectID, error) {
+func assertObjectID(id any) (bson.ObjectID, error) {
 	switch v := id.(type) {
-	case primitive.ObjectID:
+	case bson.ObjectID:
 		return v, nil
-	case *primitive.ObjectID:
+	case *bson.ObjectID:
 		return *v, nil
 	case string:
-		return primitive.ObjectIDFromHex(v)
+		return bson.ObjectIDFromHex(v)
 	default:
-		return primitive.NilObjectID, errors.New("invalid object id")
+		return bson.NilObjectID, errors.New("invalid object id")
 	}
 }
 
@@ -551,14 +547,14 @@ func getCollectionName(model ModelInterface) (string, error) {
 	return name, nil
 }
 
-func getCollectNameFromInterface(model interface{}) (string, error) {
+func getCollectNameFromInterface(model any) (string, error) {
 	if v, ok := model.(ModelInterface); ok {
 		return getCollectionName(v)
 	}
 	return "", errors.New("model is not a ModelInterface")
 }
 
-func getCollectionNameFromSlice(results interface{}) (string, error) {
+func getCollectionNameFromSlice(results any) (string, error) {
 	resultsType := reflect.TypeOf(results)
 	if resultsType.Kind() != reflect.Ptr {
 		return "", errors.New("results is not a pointer")
@@ -574,7 +570,7 @@ func getCollectionNameFromSlice(results interface{}) (string, error) {
 }
 
 // Only use when sure results is slice of ModelInterface
-func runFuncOnResultsSliceItems(results interface{}, callback func(model ModelInterface) error) error {
+func runFuncOnResultsSliceItems(results any, callback func(model ModelInterface) error) error {
 	resultsPtr := reflect.ValueOf(results)
 	resultsSlice := reflect.Indirect(resultsPtr)
 	resultsSliceLen := resultsSlice.Len()

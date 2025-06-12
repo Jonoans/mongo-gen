@@ -1,14 +1,15 @@
 package codegen
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"context"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type TransactionFunc func(ctx mongo.SessionContext) error
+type TransactionFunc func(ctx context.Context) error
 
 type BaseModel struct {
-	ID primitive.ObjectID `bson:"_id,omitempty"`
+	ID bson.ObjectID `bson:"_id,omitempty"`
 }
 
 func (m *BaseModel) GetID() interface{} {
@@ -16,5 +17,5 @@ func (m *BaseModel) GetID() interface{} {
 }
 
 func (m *BaseModel) SetID(id interface{}) {
-	m.ID = id.(primitive.ObjectID)
+	m.ID = id.(bson.ObjectID)
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/jonoans/mongo-gen/codegen"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type AnotherModel struct {
@@ -16,14 +16,14 @@ type AnotherModel struct {
 type Model struct {
 	codegen.BaseModel
 	Sub                   SubModel
-	Reference             primitive.ObjectID
-	ReferencePtr          *primitive.ObjectID
-	ReferenceSlice        []primitive.ObjectID
-	ReferenceSliceInSlice [][]*primitive.ObjectID
-	ReferenceMap          map[string]primitive.ObjectID
-	ReferenceMapPtr       map[string]*primitive.ObjectID
-	ReferencePtrSlice     *[]primitive.ObjectID
-	ReferencePtrMap       *map[string]primitive.ObjectID
+	Reference             bson.ObjectID
+	ReferencePtr          *bson.ObjectID
+	ReferenceSlice        []bson.ObjectID
+	ReferenceSliceInSlice [][]*bson.ObjectID
+	ReferenceMap          map[string]bson.ObjectID
+	ReferenceMapPtr       map[string]*bson.ObjectID
+	ReferencePtrSlice     *[]bson.ObjectID
+	ReferencePtrMap       *map[string]bson.ObjectID
 
 	errReference                  error
 	initReference                 bool
@@ -299,98 +299,98 @@ func (m *Model) GetResolved_ReferencePtrMap() (*map[string]AnotherModel, error) 
 	return m.resolvedReferencePtrMap, m.errReferencePtrMap
 }
 
-func (m *AnotherModel) AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+func (m *AnotherModel) AggregateFirst(pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	return AggregateFirst(m, pipeline, opts...)
 }
 
-func (m *AnotherModel) AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+func (m *AnotherModel) AggregateFirstWithCtx(ctx context.Context, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	return AggregateFirstWithCtx(ctx, m, pipeline, opts...)
 }
 
-func (m *AnotherModel) Find(query interface{}, opts ...*options.FindOneOptions) error {
+func (m *AnotherModel) Find(query any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindOne(m, query, opts...)
 }
 
-func (m *AnotherModel) FindWithCtx(ctx context.Context, query interface{}, opts ...*options.FindOneOptions) error {
+func (m *AnotherModel) FindWithCtx(ctx context.Context, query any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindOneWithCtx(ctx, m, query, opts...)
 }
 
-func (m *AnotherModel) FindByObjectID(id interface{}, opts ...*options.FindOneOptions) error {
+func (m *AnotherModel) FindByObjectID(id any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindByObjectID(m, id, opts...)
 }
 
-func (m *AnotherModel) FindByObjectIDWithCtx(ctx context.Context, id interface{}, opts ...*options.FindOneOptions) error {
+func (m *AnotherModel) FindByObjectIDWithCtx(ctx context.Context, id any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindByObjectIDWithCtx(ctx, m, id, opts...)
 }
 
-func (m *AnotherModel) Create(opts ...*options.InsertOneOptions) error {
+func (m *AnotherModel) Create(opts ...options.Lister[options.InsertOneOptions]) error {
 	return InsertOne(m, opts...)
 }
 
-func (m *AnotherModel) CreateWithCtx(ctx context.Context, opts ...*options.InsertOneOptions) error {
+func (m *AnotherModel) CreateWithCtx(ctx context.Context, opts ...options.Lister[options.InsertOneOptions]) error {
 	return InsertOneWithCtx(ctx, m, opts...)
 }
 
-func (m *AnotherModel) Update(opts ...*options.UpdateOptions) error {
+func (m *AnotherModel) Update(opts ...options.Lister[options.UpdateOneOptions]) error {
 	return Update(m, opts...)
 }
 
-func (m *AnotherModel) UpdateWithCtx(ctx context.Context, opts ...*options.UpdateOptions) error {
+func (m *AnotherModel) UpdateWithCtx(ctx context.Context, opts ...options.Lister[options.UpdateOneOptions]) error {
 	return UpdateWithCtx(ctx, m, opts...)
 }
 
-func (m *AnotherModel) Delete(opts ...*options.DeleteOptions) error {
+func (m *AnotherModel) Delete(opts ...options.Lister[options.DeleteOneOptions]) error {
 	return Delete(m, opts...)
 }
 
-func (m *AnotherModel) DeleteWithCtx(ctx context.Context, opts ...*options.DeleteOptions) error {
+func (m *AnotherModel) DeleteWithCtx(ctx context.Context, opts ...options.Lister[options.DeleteOneOptions]) error {
 	return DeleteWithCtx(ctx, m, opts...)
 }
 
-func (m *Model) AggregateFirst(pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+func (m *Model) AggregateFirst(pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	return AggregateFirst(m, pipeline, opts...)
 }
 
-func (m *Model) AggregateFirstWithCtx(ctx context.Context, pipeline interface{}, opts ...*options.AggregateOptions) (bool, error) {
+func (m *Model) AggregateFirstWithCtx(ctx context.Context, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
 	return AggregateFirstWithCtx(ctx, m, pipeline, opts...)
 }
 
-func (m *Model) Find(query interface{}, opts ...*options.FindOneOptions) error {
+func (m *Model) Find(query any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindOne(m, query, opts...)
 }
 
-func (m *Model) FindWithCtx(ctx context.Context, query interface{}, opts ...*options.FindOneOptions) error {
+func (m *Model) FindWithCtx(ctx context.Context, query any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindOneWithCtx(ctx, m, query, opts...)
 }
 
-func (m *Model) FindByObjectID(id interface{}, opts ...*options.FindOneOptions) error {
+func (m *Model) FindByObjectID(id any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindByObjectID(m, id, opts...)
 }
 
-func (m *Model) FindByObjectIDWithCtx(ctx context.Context, id interface{}, opts ...*options.FindOneOptions) error {
+func (m *Model) FindByObjectIDWithCtx(ctx context.Context, id any, opts ...options.Lister[options.FindOneOptions]) error {
 	return FindByObjectIDWithCtx(ctx, m, id, opts...)
 }
 
-func (m *Model) Create(opts ...*options.InsertOneOptions) error {
+func (m *Model) Create(opts ...options.Lister[options.InsertOneOptions]) error {
 	return InsertOne(m, opts...)
 }
 
-func (m *Model) CreateWithCtx(ctx context.Context, opts ...*options.InsertOneOptions) error {
+func (m *Model) CreateWithCtx(ctx context.Context, opts ...options.Lister[options.InsertOneOptions]) error {
 	return InsertOneWithCtx(ctx, m, opts...)
 }
 
-func (m *Model) Update(opts ...*options.UpdateOptions) error {
+func (m *Model) Update(opts ...options.Lister[options.UpdateOneOptions]) error {
 	return Update(m, opts...)
 }
 
-func (m *Model) UpdateWithCtx(ctx context.Context, opts ...*options.UpdateOptions) error {
+func (m *Model) UpdateWithCtx(ctx context.Context, opts ...options.Lister[options.UpdateOneOptions]) error {
 	return UpdateWithCtx(ctx, m, opts...)
 }
 
-func (m *Model) Delete(opts ...*options.DeleteOptions) error {
+func (m *Model) Delete(opts ...options.Lister[options.DeleteOneOptions]) error {
 	return Delete(m, opts...)
 }
 
-func (m *Model) DeleteWithCtx(ctx context.Context, opts ...*options.DeleteOptions) error {
+func (m *Model) DeleteWithCtx(ctx context.Context, opts ...options.Lister[options.DeleteOneOptions]) error {
 	return DeleteWithCtx(ctx, m, opts...)
 }
