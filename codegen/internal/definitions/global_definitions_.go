@@ -36,7 +36,7 @@ type ModelQueryMethods interface {
 	AggregateFirst(pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error)
 	AggregateFirstWithCtx(ctx context.Context, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error)
 	Find(any, ...options.Lister[options.FindOneOptions]) error
-	FindWithCtx(context.Context, any, ...options.Lister[options.FindOptions]) error
+	FindWithCtx(context.Context, any, ...options.Lister[options.FindOneOptions]) error
 	FindByObjectID(any, ...options.Lister[options.FindOneOptions]) error
 	FindByObjectIDWithCtx(context.Context, any, ...options.Lister[options.FindOneOptions]) error
 	Create(...options.Lister[options.InsertOneOptions]) error
