@@ -12,10 +12,10 @@ type BaseModel struct {
 	ID bson.ObjectID `bson:"_id,omitempty"`
 }
 
-func (m *BaseModel) GetID() interface{} {
+func (m *BaseModel) GetID() any {
 	return m.ID
 }
 
-func (m *BaseModel) SetID(id interface{}) {
+func (m *BaseModel) SetID(id any) {
 	m.ID = id.(bson.ObjectID)
 }

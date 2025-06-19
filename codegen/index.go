@@ -15,13 +15,6 @@ import (
 	"github.com/jonoans/mongo-gen/utils"
 )
 
-var (
-	formatTools = []string{
-		"gopls",
-		"goimports",
-	}
-)
-
 func Generate(cfg *config.ConfigFile) error {
 	decls, reservedNames := getInternalDefinitions()
 	internal.InitReservedValues(reservedNames)

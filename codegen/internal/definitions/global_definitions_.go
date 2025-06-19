@@ -113,39 +113,57 @@ func Coll(model ModelInterface) *mongo.Collection {
 // Section: Query Functions
 
 func Aggregate(results any, pipeline any, opts ...options.Lister[options.AggregateOptions]) error {
-	return AggregateWithCtx(newCtx(), results, pipeline, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return AggregateWithCtx(ctx, results, pipeline, opts...)
 }
 
 func AggregateFirst(model ModelInterface, pipeline any, opts ...options.Lister[options.AggregateOptions]) (bool, error) {
-	return AggregateFirstWithCtx(newCtx(), model, pipeline, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return AggregateFirstWithCtx(ctx, model, pipeline, opts...)
 }
 
 func Delete(model ModelInterface, opts ...options.Lister[options.DeleteOneOptions]) error {
-	return DeleteWithCtx(newCtx(), model, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return DeleteWithCtx(ctx, model, opts...)
 }
 
 func DeleteOne(model ModelInterface, query any, opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
-	return DeleteOneWithCtx(newCtx(), model, query, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return DeleteOneWithCtx(ctx, model, query, opts...)
 }
 
 func DeleteMany(model ModelInterface, query any, opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
-	return DeleteManyWithCtx(newCtx(), model, query, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return DeleteManyWithCtx(ctx, model, query, opts...)
 }
 
 func FindOne(model ModelInterface, query any, opts ...options.Lister[options.FindOneOptions]) error {
-	return FindOneWithCtx(newCtx(), model, query, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return FindOneWithCtx(ctx, model, query, opts...)
 }
 
 func FindMany(results any, query any, opts ...options.Lister[options.FindOptions]) error {
-	return FindManyWithCtx(newCtx(), results, query, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return FindManyWithCtx(ctx, results, query, opts...)
 }
 
 func FindByObjectID(model ModelInterface, id any, opts ...options.Lister[options.FindOneOptions]) error {
-	return FindByObjectIDWithCtx(newCtx(), model, id, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return FindByObjectIDWithCtx(ctx, model, id, opts...)
 }
 
 func FindByObjectIDs(results any, ids any, additionalPipeline ...any) error {
-	return FindByObjectIDsWithCtx(newCtx(), results, ids, additionalPipeline...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return FindByObjectIDsWithCtx(ctx, results, ids, additionalPipeline...)
 }
 
 func FindByObjectIDsWithCtx(ctx context.Context, results any, ids any, additionalPipeline ...any) error {
@@ -160,19 +178,27 @@ func FindByObjectIDsWithCtx(ctx context.Context, results any, ids any, additiona
 }
 
 func InsertOne(model ModelInterface, opts ...options.Lister[options.InsertOneOptions]) error {
-	return InsertOneWithCtx(newCtx(), model, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return InsertOneWithCtx(ctx, model, opts...)
 }
 
 func Update(model ModelInterface, opts ...options.Lister[options.UpdateOneOptions]) error {
-	return UpdateWithCtx(newCtx(), model, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return UpdateWithCtx(ctx, model, opts...)
 }
 
 func UpdateOne(model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
-	return UpdateOneWithCtx(newCtx(), model, filter, update, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return UpdateOneWithCtx(ctx, model, filter, update, opts...)
 }
 
 func UpdateMany(model ModelInterface, filter any, update any, opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
-	return UpdateManyWithCtx(newCtx(), model, filter, update, opts...)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return UpdateManyWithCtx(ctx, model, filter, update, opts...)
 }
 
 // Section: Context Functions
@@ -429,7 +455,9 @@ func UpdateManyWithCtx(ctx context.Context, model ModelInterface, filter any, up
 }
 
 func Transaction(fn codegen.TransactionFunc) error {
-	return TransactionWithCtx(newCtx(), fn)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return TransactionWithCtx(ctx, fn)
 }
 
 func TransactionWithCtx(ctx context.Context, fn codegen.TransactionFunc) error {
@@ -437,7 +465,9 @@ func TransactionWithCtx(ctx context.Context, fn codegen.TransactionFunc) error {
 }
 
 func TransactionWithOptions(fn codegen.TransactionFunc, opts *options.SessionOptionsBuilder) error {
-	return TransactionWithCtxOptions(newCtx(), fn, opts)
+	ctx, cancel := newCtx()
+	defer cancel()
+	return TransactionWithCtxOptions(ctx, fn, opts)
 }
 
 func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, opts *options.SessionOptionsBuilder) error {
@@ -448,14 +478,18 @@ func TransactionWithCtxOptions(ctx context.Context, fn codegen.TransactionFunc, 
 
 	return client.UseSessionWithOptions(ctx, opts, func(ctx context.Context) error {
 		sess := mongo.SessionFromContext(ctx)
-		sess.StartTransaction()
+		if err := sess.StartTransaction(); err != nil {
+			return err
+		}
 		return fn(ctx)
 	})
 }
 
 func Close() {
 	if defaultClt != nil {
-		defaultClt.client.Disconnect(newCtx())
+		ctx, cancel := newCtx()
+		defer cancel()
+		_ = defaultClt.client.Disconnect(ctx)
 		defaultClt = nil
 	}
 }
@@ -493,13 +527,13 @@ var (
 )
 
 func Ctx() context.Context {
-	return newCtx()
+	ctx, _ := newCtx()
+	return ctx
 }
 
-func newCtx() context.Context {
+func newCtx() (context.Context, func()) {
 	// Can't cancel context
-	ctx, _ := context.WithTimeout(context.Background(), defaultCfg.OperationTimeout)
-	return ctx
+	return context.WithTimeout(context.Background(), defaultCfg.OperationTimeout)
 }
 
 func getDefaultClient() (*databaseClient, error) {
@@ -574,7 +608,7 @@ func runFuncOnResultsSliceItems(results any, callback func(model ModelInterface)
 	resultsPtr := reflect.ValueOf(results)
 	resultsSlice := reflect.Indirect(resultsPtr)
 	resultsSliceLen := resultsSlice.Len()
-	for i := 0; i < resultsSliceLen; i++ {
+	for i := range resultsSliceLen {
 		item := resultsSlice.Index(i).Addr().Interface()
 		if err := callback(item.(ModelInterface)); err != nil {
 			return err

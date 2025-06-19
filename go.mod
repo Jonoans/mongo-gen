@@ -1,12 +1,10 @@
 module github.com/jonoans/mongo-gen
 
-go 1.23.0
-
-toolchain go1.24.3
+go 1.24.3
 
 require (
 	github.com/iancoleman/strcase v0.3.0
-	github.com/urfave/cli/v2 v2.27.6
+	github.com/urfave/cli/v2 v2.27.7
 	go.mongodb.org/mongo-driver/v2 v2.2.2
 	golang.org/x/tools v0.34.0
 	gopkg.in/yaml.v2 v2.4.0
