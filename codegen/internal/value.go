@@ -17,3 +17,7 @@ type Value struct {
 	InputAST   *ast.ValueSpec
 	Name       string
 }
+
+type Type struct {
+	SourceFile string
+}

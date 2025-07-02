@@ -71,7 +71,7 @@ func (f *Field) Init() {
 	f.Type = astObjectToString(f.InputAST.Type)
 	f.StructTag = astObjectToString(f.InputAST.Tag)
 
-	f.OwnType = f.InputTypesVar.Type()
+	f.OwnType = f.InputTypesVar.Type().Underlying()
 	f.ResolvedType, f.IsBuiltIn = isBuiltin(f.OwnType)
 	f.IsEmbedded = f.InputTypesVar.Embedded()
 

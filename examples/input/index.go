@@ -4,6 +4,7 @@ import "github.com/jonoans/mongo-gen/codegen"
 
 type SubModel struct {
 }
+type Random string
 
 type AnotherModel struct {
 	codegen.BaseModel
@@ -13,6 +14,7 @@ type AnotherModel struct {
 type Model struct {
 	codegen.BaseModel
 	Sub                   SubModel
+	Random                Random
 	Reference             AnotherModel
 	ReferencePtr          *AnotherModel
 	ReferenceSlice        []AnotherModel

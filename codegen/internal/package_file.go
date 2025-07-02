@@ -22,6 +22,7 @@ type PackageFile struct {
 	PackageName string
 
 	FileContents []string
+	CustomTypes  []*CustomType
 	Structs      []*Struct
 	Functions    []*Func
 	ConstValues  []*Value
@@ -33,9 +34,10 @@ type PackageFile struct {
 func (p *PackageFile) WriteToFile(cfg *config.OutputConfig) {
 	p.PackageName = cfg.PackageName
 	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString(fmt.Sprintf("package %s\n\n", p.PackageName))
+	fmt.Fprintf(buffer, "package %s\n\n", p.PackageName)
 
 	p.writeImports(buffer)
+	p.writeCustomTypes(buffer)
 	p.writeConsts(buffer)
 	p.writeVars(buffer)
 	p.writeInterfaces(buffer)
@@ -61,6 +63,19 @@ func (p *PackageFile) writeImports(buffer *bytes.Buffer) {
 	p.writeDeclsToBuffer(buffer, decl)
 }
 
+func (p *PackageFile) writeCustomTypes(buffer *bytes.Buffer) {
+	if len(p.CustomTypes) == 0 {
+		return
+	}
+
+	decl := &ast.GenDecl{Tok: token.TYPE}
+	for _, v := range p.CustomTypes {
+		decl.Specs = append(decl.Specs, v.InputAST)
+	}
+
+	p.writeDeclsToBuffer(buffer, decl)
+}
+
 func (p *PackageFile) writeConsts(buffer *bytes.Buffer) {
 	if len(p.ConstValues) == 0 {
 		return
@@ -75,6 +90,19 @@ func (p *PackageFile) writeConsts(buffer *bytes.Buffer) {
 }
 
 func (p *PackageFile) writeVars(buffer *bytes.Buffer) {
+	if len(p.VarValues) == 0 {
+		return
+	}
+
+	decl := &ast.GenDecl{Tok: token.VAR}
+	for _, v := range p.VarValues {
+		decl.Specs = append(decl.Specs, v.InputAST)
+	}
+
+	p.writeDeclsToBuffer(buffer, decl)
+}
+
+func (p *PackageFile) writeTypes(buffer *bytes.Buffer) {
 	if len(p.VarValues) == 0 {
 		return
 	}
@@ -208,6 +236,7 @@ func (p *PackageFile) Init() {
 func (p *PackageFile) Sort() {
 	p.sortStructs()
 	p.sortFunctions()
+	p.sortCustomTypes()
 	p.sortConsts()
 	p.sortInterfaces()
 	p.sortValues()
@@ -228,6 +257,12 @@ func (p *PackageFile) sortFunctions() {
 			return p.Functions[i].Parent.Name < p.Functions[j].Parent.Name
 		}
 		return p.Functions[i].Name < p.Functions[j].Name
+	})
+}
+
+func (p *PackageFile) sortCustomTypes() {
+	sort.Slice(p.CustomTypes, func(i, j int) bool {
+		return p.CustomTypes[i].Name < p.CustomTypes[j].Name
 	})
 }
 

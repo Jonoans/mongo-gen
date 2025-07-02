@@ -19,6 +19,7 @@ type Package struct {
 	InputGeneratedLines map[string][]string
 
 	// Struct-related Values
+	CustomTypes   map[string]*CustomType
 	Structs       map[string]*Struct // Key: Struct name
 	StructMethods map[string][]*Func // Key: Struct name, Value: map[FuncName]*Func
 
@@ -30,6 +31,7 @@ type Package struct {
 }
 
 func (p *Package) Init() {
+	p.CustomTypes = make(map[string]*CustomType)
 	p.Structs = make(map[string]*Struct)
 	p.StructMethods = make(map[string][]*Func)
 	p.Funcs = make(map[string][]*Func)
@@ -53,6 +55,15 @@ func (p *Package) GeneratePackageFiles() map[string]*PackageFile {
 		}
 
 		pkgFiles[n].FileContents = fc
+	}
+
+	for _, c := range p.CustomTypes {
+		if _, ok := pkgFiles[c.SourceFile]; !ok {
+			pkgFiles[c.SourceFile] = &PackageFile{
+				Filename: c.SourceFile,
+			}
+		}
+		pkgFiles[c.SourceFile].CustomTypes = append(pkgFiles[c.SourceFile].CustomTypes, c)
 	}
 
 	for _, s := range p.Structs {
@@ -80,9 +91,7 @@ func (p *Package) GeneratePackageFiles() map[string]*PackageFile {
 			}
 		}
 
-		for _, f := range fs {
-			pkgFiles[n].Functions = append(pkgFiles[n].Functions, f)
-		}
+		pkgFiles[n].Functions = append(pkgFiles[n].Functions, fs...)
 	}
 
 	for n, is := range p.Imports {
@@ -92,9 +101,7 @@ func (p *Package) GeneratePackageFiles() map[string]*PackageFile {
 			}
 		}
 
-		for _, i := range is {
-			pkgFiles[n].Imports = append(pkgFiles[n].Imports, i)
-		}
+		pkgFiles[n].Imports = append(pkgFiles[n].Imports, is...)
 	}
 
 	for n, is := range p.Interfaces {
@@ -104,9 +111,7 @@ func (p *Package) GeneratePackageFiles() map[string]*PackageFile {
 			}
 		}
 
-		for _, i := range is {
-			pkgFiles[n].Interfaces = append(pkgFiles[n].Interfaces, i)
-		}
+		pkgFiles[n].Interfaces = append(pkgFiles[n].Interfaces, is...)
 	}
 
 	for n, vs := range p.Values {
@@ -179,6 +184,13 @@ func (p *Package) parseUserStructs() {
 								SourceFile: filename,
 								InputAST:   specType,
 								Name:       structName,
+							}
+						case *ast.Ident:
+							typeName := spec.Name.Name
+							p.CustomTypes[typeName] = &CustomType{
+								SourceFile: filename,
+								InputAST:   spec,
+								Name:       typeName,
 							}
 						}
 					}
