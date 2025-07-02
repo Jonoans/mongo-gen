@@ -44,8 +44,11 @@ func isBuiltin(t types.Type) (types.Type, bool) {
 		return isBuiltin(x.Elem())
 	case *types.Slice:
 		return isBuiltin(x.Elem())
-	default:
+	case *types.Struct:
 		return t, false
+	default:
+		_, builtin := isBuiltin(t.Underlying())
+		return t, builtin
 	}
 }
 
