@@ -38,11 +38,15 @@ func isBuiltin(t types.Type) (types.Type, bool) {
 	switch x := t.(type) {
 	case *types.Basic:
 		return t, true
+	case *types.Interface:
+		return t, true
 	case *types.Map:
 		return isBuiltin(x.Elem())
 	case *types.Pointer:
 		return isBuiltin(x.Elem())
 	case *types.Slice:
+		return isBuiltin(x.Elem())
+	case *types.Array:
 		return isBuiltin(x.Elem())
 	case *types.Struct:
 		return t, false
